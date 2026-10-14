@@ -1,49 +1,52 @@
-import { useState } from "react";
-import { ExpenseItem } from "../src/components/ExpenseItem";
-import type { Expense } from "../types/Expense";
-import { ExpenseAdd } from "../src/components/ExpenseAdd";
+import { useState } from 'react';
+import { ExpenseItem } from '../src/components/ExpenseItem';
+import { ExpenseAdd } from '../src/components/ExpenseAdd';
+import { useExpenses } from '../hooks/useExpenses';
 
-const mockExpenses: Expense[] = [
-  {
-    id: '1',
-    date: '2026-10-12',
-    description: 'Courses supermarché',
-    payer: 'Alice',
-    amount: 45.2,
-  },
-  {
-    id: '2',
-    date: '2026-10-13',
-    description: 'Abonnement transport',
-    payer: 'Bob',
-    amount: 30.0,
-  },
-  {
-    id: '3',
-    date: '2026-10-14',
-    description: 'Restaurant',
-    payer: 'Alice',
-    amount: 78.5,
-  },
-];
+export const Home = () => {
+  const { expenses, loading, error, addExpense, resetExpenses } = useExpenses();
+  const [feedback, setFeedback] = useState<string | null>(null);
 
-export const Home=()=>{
-
-  const [expenses,setExpenses] = useState<Expense[]>(mockExpenses);
-  const handleAddExpense =(newExpense : Expense)=>{
-    setExpenses([...expenses, newExpense]);
+  const handleResetClick = async () => {
+    await resetExpenses();
+    setFeedback('Données réinitialisées avec succès !');
+    setTimeout(() => {
+      setFeedback(null);
+    }, 3000);
   };
 
+  return (
+    <div>
+      <h1>Liste des dépenses</h1>
 
+      {/* Boutons d'action */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+        <ExpenseAdd addExpense={addExpense} />
+        <button type="button" onClick={handleResetClick}>
+          Reset Data
+        </button>
+      </div>
 
+      {/* Message de confirmation temporaire */}
+      {feedback && <p style={{ color: 'green' }}>{feedback}</p>}
 
-    return(
-        <div>
-            <h1>"Liste des dépenses"</h1>
-            <ExpenseAdd addExpense={handleAddExpense}/>
-            <div className="expense-list">
-                {expenses.map((expense)=>(<ExpenseItem key={expense.id} expense={expense}/>))}
-            </div>
+      {/* Gestion des erreurs */}
+      {error && <p style={{ color: 'red' }}>⚠️ {error}</p>}
+
+      {/* État de chargement */}
+      {loading ? (
+        <p>Chargement des dépenses...</p>
+      ) : (
+        <div className="expense-list">
+          {expenses.length === 0 ? (
+            <p>Aucune dépense enregistrée.</p>
+          ) : (
+            expenses.map((expense) => (
+              <ExpenseItem key={expense.id} expense={expense} />
+            ))
+          )}
         </div>
-    )
-}
+      )}
+    </div>
+  );
+};
