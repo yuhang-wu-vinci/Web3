@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from 'express';
-import { getAllExpenses, addExpense } from '../services/expenses.ts';
+import { getAllExpenses, addExpense, resetExpenses } from '../services/expenses.ts';
 import type { Expense } from '../types/Expense.ts';
 
 const router = Router();
@@ -11,6 +11,21 @@ router.get('/expenses', (_req: Request, res: Response) => {
     return res.status(200).json(expenses);
   } catch (error) {
     console.error('Erreur lors de la récupération des dépenses:', error);
+    const message = error instanceof Error ? error.message : 'Erreur interne du serveur';
+    return res.status(500).json({ error: message });
+  }
+});
+
+// POST /api/expenses/reset (IMPORTANT : placé avant ou après, mais l'URL exacte est /expenses/reset)
+router.post('/expenses/reset', (_req: Request, res: Response) => {
+  try {
+    const resetData = resetExpenses();
+    return res.status(200).json({
+      message: 'Données réinitialisées avec succès.',
+      expenses: resetData,
+    });
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation des dépenses:', error);
     const message = error instanceof Error ? error.message : 'Erreur interne du serveur';
     return res.status(500).json({ error: message });
   }
