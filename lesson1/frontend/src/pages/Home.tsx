@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { ExpenseItem } from "../src/components/ExpenseItem";
 import type { Expense } from "../types/Expense";
+import { ExpenseAdd } from "../src/components/ExpenseAdd";
 
 const mockExpenses: Expense[] = [
   {
@@ -26,11 +28,21 @@ const mockExpenses: Expense[] = [
 ];
 
 export const Home=()=>{
+
+  const [expenses,setExpenses] = useState<Expense[]>(mockExpenses);
+  const handleAddExpense =(newExpense : Expense)=>{
+    setExpenses([...expenses, newExpense]);
+  };
+
+
+
+
     return(
         <div>
             <h1>"Liste des dépenses"</h1>
+            <ExpenseAdd addExpense={handleAddExpense}/>
             <div className="expense-list">
-                {mockExpenses.map((expense)=>(<ExpenseItem key={expense.id} expense={expense}/>))}
+                {expenses.map((expense)=>(<ExpenseItem key={expense.id} expense={expense}/>))}
             </div>
         </div>
     )
