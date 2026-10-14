@@ -1,7 +1,9 @@
-# Environnement et secrets
+# Environnement
 .env
 .env.local
-.env.*.local
+.env.development
+.env.production
+*.env
 
 # Dépendances Node.js / Web3
 node_modules/
