@@ -12,11 +12,14 @@ app.use(
 );
 
 app.use(express.json());
+
+// Montage du routeur sur le préfixe /api
 app.use('/api', expensesRouter);
 
-const PORT = 3000;
+// Port dynamique pour Render (ou 3000 en local)
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Serveur démarré sur http://localhost:${PORT}`);
+  console.log(`Serveur démarré sur le port ${PORT}`);
 });
 
 export default app;
