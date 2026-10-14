@@ -2,7 +2,7 @@ import type { Expense } from "../types/Expense";
 import ExpenseItem from "../components/ExpenseItem";
 import { useState } from "react";
 import ExpenseAdd from "../components/ExpenseAdd";
-import useExpenses from "../hooks/useExpenses";
+import { useExpenses } from '../hooks/useExpenses';
 import ExpenseReset from "../components/ExpenseReset";
 import ExpenseSorter from "../components/ExpenseSorter";
 
