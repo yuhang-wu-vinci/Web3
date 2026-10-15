@@ -1,9 +1,10 @@
 export interface Expense {
-  id: string;
-  date: string;
+  id: number;
+  date?: string;
   description: string;
   payer: string;
   amount: number;
 }
 
-export type NewExpense = Omit<Expense, 'id'>;
+// Représente une dépense à créer (sans son id généré par la DB)
+export type NewExpense = Omit<Expense, "id">;
