@@ -3,22 +3,40 @@ import { db } from "./src/prisma/db.ts";
 async function main() {
   console.log("Peuplement de la base de données en cours...");
 
-  // Insertion des données initiales via l'API v8
+  // 1. Création des utilisateurs initiaux
+  const alice = await db.orm.public.User.create({
+    name: "Alice",
+    email: "alice@example.com",
+    bankAccount: "BE1234567890",
+  });
+
+  const bob = await db.orm.public.User.create({
+    name: "Bob",
+    email: "bob@example.com",
+    bankAccount: "BE0987654321",
+  });
+
+  const charlie = await db.orm.public.User.create({
+    name: "Charlie",
+    email: "charlie@example.com",
+  });
+
+  // 2. Insertion des dépenses avec le nouveau modèle relationnel
   await db.orm.public.Expense.createAll([
     {
       description: "Groceries",
-      payer: "Alice",
       amount: 45.5,
+      payerId: alice.id,
     },
     {
       description: "Dinner with friends",
-      payer: "Bob",
       amount: 82.0,
+      payerId: bob.id,
     },
     {
       description: "Cinema tickets",
-      payer: "Charlie",
       amount: 24.0,
+      payerId: charlie.id,
     },
   ]);
 
