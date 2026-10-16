@@ -16,6 +16,21 @@ expensesRouter.get("/expenses", async (_req, res) => {
   }
 });
 
+// POST /api/expenses (et /api/expenses/add au cas où)
+expensesRouter.post(["/expenses", "/expenses/add"], async (req, res) => {
+  try {
+    const expense = req.body;
+    if (!isValidNewExpense(expense)) {
+      return res.status(400).json({ error: "Invalid expense" });
+    }
+    const createdExpense = await ExpensesService.addExpense(expense);
+    return res.status(201).json(createdExpense);
+  } catch (error) {
+    console.error("Error adding expense:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return res.status(500).json({ error: message });
+  }
+});
 
 // POST /api/expenses/reset
 expensesRouter.post("/expenses/reset", async (_req, res) => {
