@@ -1,36 +1,48 @@
 import { db } from "../src/prisma/db.ts";
-import type { Expense } from "../types/expense.ts";
 
 export class ExpensesService {
-  /**
-   * Récupère toutes les dépenses enregistrées avec leur payeur
-   */
   static async getAllExpenses() {
     const expenses = await db.orm.public.Expense.all();
     return expenses.sort((a, b) => a.id - b.id);
   }
 
-  /**
-   * Ajoute une nouvelle dépense
-   */
-  static async addExpense(expenseData: { description: string; amount: number; payerId: number; date?: string }) {
+  static async addExpense(expenseData: any) {
+    let payerId: number;
+
+    if (expenseData.payerId !== undefined) {
+      payerId = Number(expenseData.payerId);
+    } else if (expenseData.payer) {
+      // Recherche de l'utilisateur par nom
+      const users = await db.orm.public.User.where(({ name }) =>
+        name.equals(String(expenseData.payer))
+      ).all();
+
+      if (users.length > 0) {
+        payerId = users[0].id;
+      } else {
+        // Crée l'utilisateur s'il n'existe pas encore
+        const newUser = await db.orm.public.User.create({
+          name: String(expenseData.payer),
+          email: `${String(expenseData.payer).toLowerCase()}@example.com`,
+        });
+        payerId = newUser.id;
+      }
+    } else {
+      throw new Error("Missing payer or payerId");
+    }
+
     return await db.orm.public.Expense.create({
-      description: expenseData.description,
+      description: String(expenseData.description),
       amount: Number(expenseData.amount),
-      payerId: Number(expenseData.payerId),
-      ...(expenseData.date ? { date: expenseData.date } : {}),
+      payerId: payerId,
+      ...(expenseData.date ? { date: String(expenseData.date) } : {}),
     });
   }
 
-  /**
-   * Réinitialise les données
-   */
   static async resetExpenses() {
-    // Supprime toutes les entrées existantes
     await db.orm.public.Expense.where(({ id }) => id.gte(0)).deleteAll();
     await db.orm.public.User.where(({ id }) => id.gte(0)).deleteAll();
 
-    // Recrée un utilisateur par défaut pour le reset
     const alice = await db.orm.public.User.create({
       name: "Alice",
       email: "alice@reset.com",
@@ -41,7 +53,6 @@ export class ExpensesService {
       email: "bob@reset.com",
     });
 
-    // Réinsère les données de base
     await db.orm.public.Expense.createAll([
       {
         description: "Pizza night",
