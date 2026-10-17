@@ -56,10 +56,10 @@ export class ExpensesService {
       ...(expenseData.date ? { date: String(expenseData.date) } : {}),
     });
 
-    // Récupère avec les infos du payeur pour le retour API
-    const fullExpense = await db.orm.public.Expense.where(({ id }) =>
-      id.equals(created.id)
-    ).include("payer").first();
+// APRÈS (syntaxe Prisma 8 correcte) :
+const fullExpense = await db.orm.public.Expense.where(({ id }) =>
+  id.eq(created.id)
+).include("payer").first();
 
     return {
       id: created.id,
