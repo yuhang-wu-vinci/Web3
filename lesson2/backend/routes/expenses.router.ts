@@ -16,12 +16,12 @@ expensesRouter.get("/expenses", async (_req, res) => {
   }
 });
 
-// POST /api/expenses (et /api/expenses/add au cas où)
+// POST /api/expenses
 expensesRouter.post(["/expenses", "/expenses/add"], async (req, res) => {
   try {
     const expense = req.body;
     if (!isValidNewExpense(expense)) {
-      return res.status(400).json({ error: "Invalid expense" });
+      return res.status(400).json({ error: "Invalid expense payload" });
     }
     const createdExpense = await ExpensesService.addExpense(expense);
     return res.status(201).json(createdExpense);

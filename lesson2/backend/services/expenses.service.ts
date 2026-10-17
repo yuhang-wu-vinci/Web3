@@ -1,44 +1,79 @@
 import { db } from "../src/prisma/db.ts";
 
 export class ExpensesService {
+  /**
+   * Récupère toutes les dépenses avec le payeur relié
+   */
   static async getAllExpenses() {
-    const expenses = await db.orm.public.Expense.all();
-    return expenses.sort((a, b) => a.id - b.id);
+    const expenses = await db.orm.public.Expense.include("payer").all();
+
+    return expenses
+      .map((e) => ({
+        id: e.id,
+        description: e.description,
+        amount: e.amount,
+        date: e.date,
+        payerId: e.payerId,
+        payer: e.payer ? e.payer.name : "Unknown",
+      }))
+      .sort((a, b) => a.id - b.id);
   }
 
+  /**
+   * Ajoute une dépense en gérant payerId ou le nom du payer
+   */
   static async addExpense(expenseData: any) {
-    let payerId: number;
+    let resolvedPayerId: number;
 
     if (expenseData.payerId !== undefined) {
-      payerId = Number(expenseData.payerId);
+      resolvedPayerId = Number(expenseData.payerId);
     } else if (expenseData.payer) {
-      // Recherche de l'utilisateur par nom
-      const users = await db.orm.public.User.where(({ name }) =>
-        name.equals(String(expenseData.payer))
-      ).all();
+      const payerName = String(expenseData.payer).trim();
 
-      if (users.length > 0) {
-        payerId = users[0].id;
+      // Cherche l'utilisateur existant
+      const existingUsers = await db.orm.public.User.where(({ name }) =>
+  name.eq(payerName)
+).all();
+
+      if (existingUsers.length > 0) {
+        resolvedPayerId = existingUsers[0].id;
       } else {
-        // Crée l'utilisateur s'il n'existe pas encore
+        // Crée l'utilisateur avec un email unique s'il n'existe pas encore
         const newUser = await db.orm.public.User.create({
-          name: String(expenseData.payer),
-          email: `${String(expenseData.payer).toLowerCase()}@example.com`,
+          name: payerName,
+          email: `${payerName.toLowerCase()}_${Date.now()}@example.com`,
         });
-        payerId = newUser.id;
+        resolvedPayerId = newUser.id;
       }
     } else {
       throw new Error("Missing payer or payerId");
     }
 
-    return await db.orm.public.Expense.create({
+    const created = await db.orm.public.Expense.create({
       description: String(expenseData.description),
       amount: Number(expenseData.amount),
-      payerId: payerId,
+      payerId: resolvedPayerId,
       ...(expenseData.date ? { date: String(expenseData.date) } : {}),
     });
+
+    // Récupère avec les infos du payeur pour le retour API
+    const fullExpense = await db.orm.public.Expense.where(({ id }) =>
+      id.equals(created.id)
+    ).include("payer").first();
+
+    return {
+      id: created.id,
+      description: created.description,
+      amount: created.amount,
+      date: created.date,
+      payerId: created.payerId,
+      payer: fullExpense?.payer?.name ?? (expenseData.payer || "Unknown"),
+    };
   }
 
+  /**
+   * Réinitialise les données
+   */
   static async resetExpenses() {
     await db.orm.public.Expense.where(({ id }) => id.gte(0)).deleteAll();
     await db.orm.public.User.where(({ id }) => id.gte(0)).deleteAll();
@@ -66,6 +101,6 @@ export class ExpensesService {
       },
     ]);
 
-    return await db.orm.public.Expense.all();
+    return await this.getAllExpenses();
   }
 }
