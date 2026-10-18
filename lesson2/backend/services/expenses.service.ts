@@ -1,11 +1,19 @@
 import { db } from "../src/prisma/db.ts";
+import type { ExpenseFilter } from "../types/expense.ts";
 
 export class ExpensesService {
   /**
-   * Récupère toutes les dépenses avec le payeur relié
+   * Récupère toutes les dépenses avec le payeur relié, avec filtrage optionnel sur le montant
    */
-  static async getAllExpenses() {
-    const expenses = await db.orm.public.Expense.include("payer").all();
+  static async getAllExpenses(filter?: ExpenseFilter) {
+    let query = db.orm.public.Expense.include("payer");
+
+    if (filter?.amount !== undefined) {
+      const minAmount = filter.amount;
+      query = query.where(({ amount }) => amount.gte(minAmount));
+    }
+
+    const expenses = await query.all();
 
     return expenses
       .map((e) => ({
@@ -30,15 +38,13 @@ export class ExpensesService {
     } else if (expenseData.payer) {
       const payerName = String(expenseData.payer).trim();
 
-      // Cherche l'utilisateur existant
       const existingUsers = await db.orm.public.User.where(({ name }) =>
-  name.eq(payerName)
-).all();
+        name.eq(payerName)
+      ).all();
 
       if (existingUsers.length > 0) {
         resolvedPayerId = existingUsers[0].id;
       } else {
-        // Crée l'utilisateur avec un email unique s'il n'existe pas encore
         const newUser = await db.orm.public.User.create({
           name: payerName,
           email: `${payerName.toLowerCase()}_${Date.now()}@example.com`,
@@ -56,10 +62,9 @@ export class ExpensesService {
       ...(expenseData.date ? { date: String(expenseData.date) } : {}),
     });
 
-// APRÈS (syntaxe Prisma 8 correcte) :
-const fullExpense = await db.orm.public.Expense.where(({ id }) =>
-  id.eq(created.id)
-).include("payer").first();
+    const fullExpense = await db.orm.public.Expense.where(({ id }) =>
+      id.eq(created.id)
+    ).include("payer").first();
 
     return {
       id: created.id,

@@ -1,0 +1,8 @@
+### Toutes les dépenses
+GET http://localhost:3000/api/expenses
+
+### Filtrer >= 30
+GET http://localhost:3000/api/expenses?amount=30
+
+### Erreur attendue (400)
+GET http://localhost:3000/api/expenses?amount=-10

@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react';
-import type { Expense } from '../types/Expense';
+import { useState, useEffect, useCallback } from "react";
+import type { Expense } from "../types/Expense";
 
-// Récupération de l'URL avec fallback
-const host = import.meta.env.VITE_API_URL || 'http://unknown-api-url.com';
+const host = import.meta.env.VITE_API_URL || "http://unknown-api-url.com";
 
 export const useExpenses = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async (amount?: number) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${host}/api/expenses`);
+      const url = new URL(`${host}/api/expenses`);
+      if (amount !== undefined) {
+        url.searchParams.append("amount", amount.toString());
+      }
+
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`Erreur serveur (${response.status})`);
       }
@@ -22,24 +26,24 @@ export const useExpenses = () => {
       const data: Expense[] = await response.json();
       setExpenses(data);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Impossible de charger les dépenses';
+      const msg = err instanceof Error ? err.message : "Impossible de charger les dépenses";
       setError(msg);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [fetchExpenses]);
 
   const addExpense = async (newExpense: Expense) => {
     try {
       setError(null);
       const response = await fetch(`${host}/api/expenses`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(newExpense),
       });
@@ -59,7 +63,7 @@ export const useExpenses = () => {
     try {
       setError(null);
       const response = await fetch(`${host}/api/expenses/reset`, {
-        method: 'POST',
+        method: "POST",
       });
 
       if (!response.ok) {
@@ -68,7 +72,7 @@ export const useExpenses = () => {
 
       await fetchExpenses();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Échec de la réinitialisation';
+      const msg = err instanceof Error ? err.message : "Échec de la réinitialisation";
       setError(msg);
     }
   };
@@ -77,6 +81,7 @@ export const useExpenses = () => {
     expenses,
     loading,
     error,
+    fetchExpenses,
     addExpense,
     resetExpenses,
   };

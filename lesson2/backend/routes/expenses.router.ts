@@ -1,13 +1,19 @@
 import express from "express";
 import { ExpensesService } from "../services/expenses.service.ts";
 import { isValidNewExpense } from "../guards/expenses.guard.ts";
+import { parseExpenseFilter } from "../types/expense.ts";
 
 const expensesRouter = express.Router();
 
 // GET /api/expenses
-expensesRouter.get("/expenses", async (_req, res) => {
+expensesRouter.get("/expenses", async (req, res) => {
   try {
-    const expenses = await ExpensesService.getAllExpenses();
+    const filter = parseExpenseFilter(req.query);
+    if (filter === false) {
+      return res.status(400).json({ error: "Invalid query parameters" });
+    }
+
+    const expenses = await ExpensesService.getAllExpenses(filter);
     return res.status(200).json(expenses);
   } catch (error) {
     console.error("Error fetching expenses:", error);
