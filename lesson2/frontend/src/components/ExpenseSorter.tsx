@@ -8,8 +8,11 @@ interface ExpenseSorterProps {
   setSortingAlgo: (algo: SortingAlgo) => void;
 }
 
-const dateNewestAlgo: SortingAlgo = (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime();
-const dateOldestAlgo: SortingAlgo = (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime();
+const dateNewestAlgo: SortingAlgo = (a, b) =>
+  new Date(b.date!).getTime() - new Date(a.date!).getTime();
+
+const dateOldestAlgo: SortingAlgo = (a, b) =>
+  new Date(a.date!).getTime() - new Date(b.date!).getTime();
 
 export default function ExpenseSorter({ setSortingAlgo }: ExpenseSorterProps) {
   const [sortBy, setSortBy] = useState<SortOption>('date-newest');
