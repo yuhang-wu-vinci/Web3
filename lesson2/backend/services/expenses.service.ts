@@ -3,7 +3,7 @@ import type { ExpenseFilter } from "../types/expense.ts";
 
 export class ExpensesService {
   /**
-   * Récupère toutes les dépenses avec le payeur relié, avec filtrage optionnel sur le montant
+   * Récupère toutes les dépenses avec filtres optionnels (amount, payerId)
    */
   static async getAllExpenses(filter?: ExpenseFilter) {
     let query = db.orm.public.Expense.include("payer");
@@ -11,6 +11,11 @@ export class ExpensesService {
     if (filter?.amount !== undefined) {
       const minAmount = filter.amount;
       query = query.where(({ amount }) => amount.gte(minAmount));
+    }
+
+    if (filter?.payerId !== undefined) {
+      const targetPayerId = filter.payerId;
+      query = query.where(({ payerId }) => payerId.eq(targetPayerId));
     }
 
     const expenses = await query.all();

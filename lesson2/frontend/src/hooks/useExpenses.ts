@@ -1,21 +1,30 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Expense } from "../types/Expense";
 
-const host = import.meta.env.VITE_API_URL || "http://unknown-api-url.com";
+const host = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+export interface SearchFilters {
+  amount?: number;
+  payerId?: number;
+}
 
 export const useExpenses = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchExpenses = useCallback(async (amount?: number) => {
+  const fetchExpenses = useCallback(async (filters?: SearchFilters) => {
     try {
       setLoading(true);
       setError(null);
 
       const url = new URL(`${host}/api/expenses`);
-      if (amount !== undefined) {
-        url.searchParams.append("amount", amount.toString());
+
+      if (filters?.amount !== undefined) {
+        url.searchParams.append("amount", filters.amount.toString());
+      }
+      if (filters?.payerId !== undefined) {
+        url.searchParams.append("payerId", filters.payerId.toString());
       }
 
       const response = await fetch(url.toString());

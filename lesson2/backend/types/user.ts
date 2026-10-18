@@ -15,7 +15,6 @@ export const userSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1).max(100),
   email: z.email(),
-  bankAccount: z.string().nullable(),
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -33,6 +32,5 @@ export function userFromDBO(dbo: UserDBO): User {
     id: dbo.id,
     name: dbo.name,
     email: dbo.email,
-    bankAccount: dbo.bankAccount,
   };
 }

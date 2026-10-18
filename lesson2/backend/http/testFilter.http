@@ -1,8 +1,8 @@
-### Toutes les dépenses
-GET http://localhost:3000/api/expenses
+### 1. Récupérer tous les utilisateurs
+GET http://localhost:3000/api/users
 
-### Filtrer >= 30
-GET http://localhost:3000/api/expenses?amount=30
+### 2. Filtrer les dépenses payées par l'utilisateur avec id=1
+GET http://localhost:3000/api/expenses?payerId=0
 
-### Erreur attendue (400)
-GET http://localhost:3000/api/expenses?amount=-10
+### 3. Filtrer par montant ET par utilisateur
+GET http://localhost:3000/api/expenses?amount=20&payerId=1
