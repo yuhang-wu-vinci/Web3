@@ -3,10 +3,10 @@ import type { ExpenseFilter } from "../types/expense.ts";
 
 export class ExpensesService {
   /**
-   * Récupère toutes les dépenses avec filtres optionnels (amount, payerId)
+   * Récupère toutes les dépenses avec filtres optionnels (amount, payerId, categoryId)
    */
   static async getAllExpenses(filter?: ExpenseFilter) {
-    let query = db.orm.public.Expense.include("payer");
+    let query = db.orm.public.Expense.include("payer").include("category");
 
     if (filter?.amount !== undefined) {
       const minAmount = filter.amount;
@@ -16,6 +16,11 @@ export class ExpensesService {
     if (filter?.payerId !== undefined) {
       const targetPayerId = filter.payerId;
       query = query.where(({ payerId }) => payerId.eq(targetPayerId));
+    }
+
+    if (filter?.categoryId !== undefined) {
+      const targetCategoryId = filter.categoryId;
+      query = query.where(({ categoryId }) => categoryId.eq(targetCategoryId));
     }
 
     const expenses = await query.all();
@@ -28,12 +33,20 @@ export class ExpensesService {
         date: e.date,
         payerId: e.payerId,
         payer: e.payer ? e.payer.name : "Unknown",
+        categoryId: e.categoryId ?? null,
+        category: e.category
+          ? {
+              id: e.category.id,
+              name: e.category.name,
+              colour: e.category.colour,
+            }
+          : null,
       }))
       .sort((a, b) => a.id - b.id);
   }
 
   /**
-   * Ajoute une dépense en gérant payerId ou le nom du payer
+   * Ajoute une dépense avec catégorie optionnelle
    */
   static async addExpense(expenseData: any) {
     let resolvedPayerId: number;
@@ -64,12 +77,16 @@ export class ExpensesService {
       description: String(expenseData.description),
       amount: Number(expenseData.amount),
       payerId: resolvedPayerId,
+      categoryId: expenseData.categoryId ? Number(expenseData.categoryId) : null,
       ...(expenseData.date ? { date: String(expenseData.date) } : {}),
     });
 
     const fullExpense = await db.orm.public.Expense.where(({ id }) =>
       id.eq(created.id)
-    ).include("payer").first();
+    )
+      .include("payer")
+      .include("category")
+      .first();
 
     return {
       id: created.id,
@@ -78,6 +95,14 @@ export class ExpensesService {
       date: created.date,
       payerId: created.payerId,
       payer: fullExpense?.payer?.name ?? (expenseData.payer || "Unknown"),
+      categoryId: fullExpense?.categoryId ?? null,
+      category: fullExpense?.category
+        ? {
+            id: fullExpense.category.id,
+            name: fullExpense.category.name,
+            colour: fullExpense.category.colour,
+          }
+        : null,
     };
   }
 

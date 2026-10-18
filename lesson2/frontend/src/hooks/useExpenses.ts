@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import type { Expense } from "../types/Expense";
+import type { Expense, NewExpense } from "../types/Expense";
 
 const host = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export interface SearchFilters {
   amount?: number;
   payerId?: number;
+  categoryId?: number;
 }
 
 export const useExpenses = () => {
@@ -25,6 +26,9 @@ export const useExpenses = () => {
       }
       if (filters?.payerId !== undefined) {
         url.searchParams.append("payerId", filters.payerId.toString());
+      }
+      if (filters?.categoryId !== undefined) {
+        url.searchParams.append("categoryId", filters.categoryId.toString());
       }
 
       const response = await fetch(url.toString());
@@ -46,7 +50,7 @@ export const useExpenses = () => {
     fetchExpenses();
   }, [fetchExpenses]);
 
-  const addExpense = async (newExpense: Expense) => {
+  const addExpense = async (newExpense: NewExpense | Expense) => {
     try {
       setError(null);
       const response = await fetch(`${host}/api/expenses`, {

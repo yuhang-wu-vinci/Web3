@@ -1,102 +1,69 @@
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { Expense } from "../types/Expense";
+import { useState, type FormEvent } from "react";
+import type { NewExpense } from "../types/Expense";
+import type { Category } from "../types/Category";
 
 interface ExpenseAddProps {
-  addExpense: (expense: Expense) => void;
+  categories: Category[];
+  addExpense: (expense: NewExpense) => Promise<void>;
 }
 
-// 1. Définition du schéma de validation avec Zod (version simplifiée et compatible)
-const expenseSchema = z.object({
-  payer: z.enum(["Alice", "Bob"]),
-  date: z.string().min(1, "La date est obligatoire"),
-  description: z
-    .string()
-    .max(200, "La description ne peut pas dépasser 200 caractères")
-    .optional(),
-  amount: z
-    .number()
-    .positive("Le montant doit être un nombre positif"),
-});
+function ExpenseAdd({ categories, addExpense }: ExpenseAddProps) {
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [payer, setPayer] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("");
 
-// Inférer le type TypeScript automatiquement à partir du schéma Zod
-type ExpenseFormData = z.infer<typeof expenseSchema>;
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
 
-function ExpenseAdd({ addExpense }: ExpenseAddProps) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ExpenseFormData>({
-    resolver: zodResolver(expenseSchema),
-    defaultValues: {
-      payer: "Alice",
-      date: new Date().toISOString().split("T")[0],
-      description: "",
-      amount: 0,
-    },
-  });
+    if (!description || !amount || !payer) return;
 
-  const onSubmit = (data: ExpenseFormData) => {
-    const newExpense = {
-      id: 0,
-      payer: data.payer,
-      date: data.date,
-      description: data.description || "",
-      amount: data.amount,
-    };
+    await addExpense({
+      description,
+      amount: parseFloat(amount),
+      payer,
+      categoryId: categoryId ? parseInt(categoryId, 10) : null,
+    });
 
-    addExpense(newExpense as Expense);
-    reset();
+    setDescription("");
+    setAmount("");
+    setPayer("");
+    setCategoryId("");
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} style={{ marginBottom: "20px" }}>
-      <h2>Add a new Expense (Zod Validation)</h2>
-
-      <div>
-        <label>Payer: </label>
-        <select {...register("payer")}>
-          <option value="Alice">Alice</option>
-          <option value="Bob">Bob</option>
-        </select>
-        {errors.payer && <p style={{ color: "red" }}>{errors.payer.message}</p>}
-      </div>
-
-      <div>
-        <label>Date: </label>
-        <input type="date" {...register("date")} />
-        {errors.date && <p style={{ color: "red" }}>{errors.date.message}</p>}
-      </div>
-
-      <div>
-        <label>Description: </label>
-        <input
-          type="text"
-          placeholder="Ex: Restaurant"
-          {...register("description")}
-        />
-        {errors.description && (
-          <p style={{ color: "red" }}>{errors.description.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label>Amount: </label>
-        <input
-          type="number"
-          step="0.01"
-          placeholder="0.00"
-          {...register("amount", { valueAsNumber: true })}
-        />
-        {errors.amount && <p style={{ color: "red" }}>{errors.amount.message}</p>}
-      </div>
-
-      <button type="submit" style={{ marginTop: "10px" }}>
-        Add Expense
-      </button>
+    <form onSubmit={handleSubmit} style={{ margin: "1rem 0", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+      <input
+        type="text"
+        placeholder="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        required
+      />
+      <input
+        type="number"
+        step="0.01"
+        placeholder="Amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        required
+      />
+      <input
+        type="text"
+        placeholder="Payer name"
+        value={payer}
+        onChange={(e) => setPayer(e.target.value)}
+        required
+      />
+      <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+        <option value="">No category</option>
+        {categories.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+      <button type="submit">Add expense</button>
     </form>
   );
 }

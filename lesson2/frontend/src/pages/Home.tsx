@@ -4,6 +4,7 @@ import { useState } from "react";
 import ExpenseAdd from "../components/ExpenseAdd";
 import { useExpenses, type SearchFilters } from "../hooks/useExpenses";
 import { useUsers } from "../hooks/useUsers";
+import { useCategories } from "../hooks/useCategories";
 import ExpenseReset from "../components/ExpenseReset";
 import ExpenseSorter from "../components/ExpenseSorter";
 import ExpenseSearch from "../components/ExpenseSearch";
@@ -11,6 +12,7 @@ import ExpenseSearch from "../components/ExpenseSearch";
 function Home() {
   const { expenses, addExpense, resetExpenses, fetchExpenses, loading, error } = useExpenses();
   const { users } = useUsers();
+  const { categories } = useCategories();
   const [sortingAlgo, setSortingAlgo] = useState<(a: Expense, b: Expense) => number>(() => () => 1);
 
   const handleAlgoChange = (algo: (a: Expense, b: Expense) => number) => {
@@ -26,11 +28,11 @@ function Home() {
   return (
     <div>
       <h1>Manage your expenses</h1>
-      <ExpenseAdd addExpense={addExpense} />
+      <ExpenseAdd categories={categories} addExpense={addExpense} />
       <ExpenseReset resetExpenses={resetExpenses} />
 
       <h2>Search</h2>
-      <ExpenseSearch users={users} onSearch={handleSearch} />
+      <ExpenseSearch users={users} categories={categories} onSearch={handleSearch} />
 
       <h2>Your expenses</h2>
       {loading && <p>Loading expenses...</p>}

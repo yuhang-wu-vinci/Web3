@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { userSchema } from "./user.ts";
+import { categorySchema } from "./category.ts";
 
 export const expenseSchema = z.object({
   id: z.number(),
@@ -8,6 +9,8 @@ export const expenseSchema = z.object({
   payerId: z.number(),
   payer: userSchema.optional(),
   amount: z.number().nonnegative(),
+  categoryId: z.number().nullable().optional(),
+  category: categorySchema.nullable().optional(),
 });
 
 export const newExpenseSchema = expenseSchema.omit({ id: true });
@@ -15,6 +18,7 @@ export const newExpenseSchema = expenseSchema.omit({ id: true });
 const expenseFilterSchema = z.object({
   amount: z.coerce.number().nonnegative().optional(),
   payerId: z.coerce.number().int().positive().optional(),
+  categoryId: z.coerce.number().int().positive().optional(),
 });
 
 function parseWithSchema<T>(schema: z.ZodType<T>, data: unknown): T | false {
