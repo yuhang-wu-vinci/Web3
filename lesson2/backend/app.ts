@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import expensesRouter from './routes/expenses.router.ts';
 import usersRouter from "./routes/users.router.ts";
+import categoriesRouter from './routes/categories.router.ts';
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 // Montage du routeur sur le préfixe /api
 app.use('/api', expensesRouter);
 app.use("/api", usersRouter);
+app.use("/api",categoriesRouter);
 
 // Port dynamique pour Render (ou 3000 en local)
 const PORT = process.env.PORT || 3000;
